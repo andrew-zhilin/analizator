@@ -1,0 +1,131 @@
+@font-face {
+	font-family: "Neucha", cursive;
+	src: url('fonts/Neucha.ttf');
+}
+
+/* HEADER */
+
+div.header {
+	padding: 10px;
+	text-align: center;
+	background: black;
+	color: white;
+	padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.header a {
+    font-family: "Neucha", cursive;
+	font-size: 40px;
+	color: white;
+	text-decoration: none;
+}
+
+.header a:hover {
+	color: #FFA500;
+}
+
+/* FOOTER */
+
+div.footer {
+	padding: 10px;
+	text-align: center;
+	background: black;
+	color: white;
+}
+
+.footer h2 {
+	font: bold 24pt arial;
+}
+
+/* HEADERS */
+
+h1 {
+	font-family: "Neucha", cursive;
+	font-size: 22px;
+}
+
+/* CONTENT */
+
+html {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100%;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+}
+
+div.content {
+	width: 1110px;
+	margin: auto;
+	margin-top: 0px;
+	padding-bottom: 30px;
+}
+
+/* TABLE */
+
+table {
+	border: 1px solid;
+	border-collapse: collapse;
+	font-family: "Neucha", cursive;
+}
+
+table a {
+    font-size: 16px;
+}
+
+th {
+	border: 1px solid;
+	color: white;
+	background-color: black;
+	border: 1px solid;
+	padding-top: 3px;
+	padding-bottom: 5px;
+}
+
+td {
+	border: 1px solid;
+	padding-top: 4px;
+	padding-bottom: 7px;
+}
+
+/* LINK */
+
+a {
+	font-family: "Neucha", cursive;
+	color: black;
+	font-size: 18px;
+}
+
+a:hover {
+	color: #FFA500;
+}
+
+/* PAGINATION */
+
+.pagination {
+	display: inline-block;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.pagination a {
+	color: black;
+	float: left;
+	padding: 4px 8px;
+	text-decoration: none;
+}
+
+.pagination a.active {
+	background-color: black;
+	color: white;
+	border-radius: 5px;
+}
+
+.pagination a:hover:not(.active) {
+	background-color: #ddd;
+	border-radius: 5px;
+}

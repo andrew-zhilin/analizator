@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" th:href="@{/css/global.css}">
+<meta charset="UTF-8">
+<title th:text="'Анализатор - ' + ${item.name}"></title>
+</head>
+<body>
+	<div th:insert="~{layouts/header :: header}"></div>
+
+	<div class="content">
+
+		<div class="pagination">
+			<a th:href="@{/items/{id}(id=${item.id}, from=${from}, to=${to})}"
+				th:class="${warehouse == null} ? active">Все склады</a> <a
+				th:href="@{/items/{id}(id=${item.id}, wh='vdk', from=${from}, to=${to})}"
+				th:class="${warehouse != null && warehouse.getName().equals('vdk')} ? active">Владивосток</a>
+			<a
+				th:href="@{/items/{id}(id=${item.id}, wh='msk', from=${from}, to=${to})}"
+				th:class="${warehouse != null && warehouse.getName().equals('msk')} ? active">Москва</a>
+		</div>
+
+		<div>
+			<form th:action="@{/items/{id}(id=${item.id})}" method="get">
+				<input type="hidden" th:if="${warehouse != null}" th:value="${warehouse.getName()}" th:attr="name='wh'">
+				<input type="date" name="from" th:attr="value=${from}, min=${minDate}, max=${maxDate}">
+				<input type="date" name="to" th:attr="value=${to}, min=${minDate}, max=${maxDate}">
+				<input type="submit" value="Применить">
+			</form>
+		</div>
+
+        <br>
+        <a th:if="${warehouse == null}" th:href="@{/items/{id}(id=${item.id}, from=${beginningOfTheYear}, to=${maxDate})}">С начала года</a>
+        <a th:if="${warehouse != null}" th:href="@{/items/{id}(id=${item.id}, wh=${warehouse.getName()}, from=${beginningOfTheYear}, to=${maxDate})}">С начала года</a>
+        <br>
+        <br>
+
+		<table style="width: 100%;">
+            <tr>
+                <th width="12%">Код</th>
+                <th width="12%">Бренд</th>
+                <th width="12%">Артикул</th>
+                <th width="52%">Наименование</th>
+                <th width="12%">Создана</th>
+            </tr>
+            <tr>
+                <td th:text="${item.code}" style="text-align: center;"></td>
+                <td th:text="${item.manufacturer}" style="text-align: center;"></td>
+                <td th:text="${item.partNumber}" style="text-align: center;"></td>
+                <td th:text="${item.name}"></td>
+                <td style="text-align: center;">
+                    <a th:if="${warehouse == null}" th:text="${#temporals.format(item.createdAt,'dd.MM.yyyy')}" th:href="@{/items/{id}(id=${item.id}, from=${item.createdAt}, to=${to})}"></a>
+                    <a th:if="${warehouse != null}" th:text="${#temporals.format(item.createdAt,'dd.MM.yyyy')}" th:href="@{/items/{id}(id=${item.id}, wh=${warehouse.getName()}, from=${item.createdAt}, to=${to})}"></a>
+                </td>
+            </tr>
+            <tr>
+                <td th:text="${item.crossReference}" colspan="5" style="background: #E8E8E8;"></td>
+            </tr>
+        </table>
+
+        <hr>
+
+        <h1>Динамика цен</h1>
+        
+        <div>
+            <canvas height="300px" width="100%" id="priceChart"></canvas>
+        </div>
+
+        <hr>
+
+        <h1>Динамика остатков</h1>
+        
+        <div>
+            <canvas height="300px" width="100%" id="stockChart"></canvas>
+        </div>
+        
+        <hr>
+
+		<h1>Продажи</h1>
+		
+		<table style="width: 100%;">
+			<tr>
+				<th width="50%">Продано за период</th>
+				<th width="50%">На сумму</th>
+			</tr>
+			<tr>
+				<td
+					th:text="${item.soldBetween(from, to)} + ' ' + ${item.getMeasure}"
+					style="text-align: center;"></td>
+				<td
+					th:text="${#numbers.formatInteger(item.amountOfSales(from, to), 0, 'WHITESPACE')} + ' руб.'"
+					style="text-align: center;"></td>
+			</tr>
+		</table>
+		
+		<div>
+            <canvas height="300px" width="100%" id="amountOfSalesChart"></canvas>
+        </div>
+
+        <div>
+            <canvas height="300px" width="100%" id="salesChart"></canvas>
+        </div>
+
+        <hr>
+
+		<h1>Поступления</h1>
+
+		<table style="width: 100%;">
+			<tr>
+				<th width="50%">Поступило за период</th>
+				<th width="50%">На сумму</th>
+			</tr>
+			<tr>
+				<td
+					th:text="${item.arrivedBetween(from, to)} + ' ' + ${item.getMeasure}"
+					style="text-align: center;"></td>
+				<td
+					th:text="${#numbers.formatInteger(item.amountOfArrivals(from, to), 0, 'WHITESPACE')} + ' руб.'"
+					style="text-align: center;"></td>
+			</tr>
+		</table>
+
+        <div>
+            <canvas height="300px" width="100%" id="amountOfArrivalsChart"></canvas>
+        </div>
+
+        <div>
+            <canvas height="300px" width="100%" id="arrivalsChart"></canvas>
+        </div>
+
+	</div>
+
+	<div th:insert="~{layouts/footer :: footer}"></div>
+	
+	<script th:inline="javascript">
+            /*<![CDATA[*/
+            var measure = [[${item.getMeasure()}]];
+            var amountOfSalesLabels = [[${amountOfSalesMap.keySet()}]];
+            var amountOfSalesValues = [[${amountOfSalesMap.values()}]];
+            var saleLabels = [[${saleMap.keySet()}]];
+            var saleValues = [[${saleMap.values()}]];
+            var amountOfArrivalsLabels = [[${amountOfArrivalsMap.keySet()}]];
+            var amountOfArrivalsValues = [[${amountOfArrivalsMap.values()}]];
+            var arrivalLabels = [[${arrivalMap.keySet()}]];
+            var arrivalValues = [[${arrivalMap.values()}]];
+            var priceLabels = [[${priceMap.keySet()}]];
+            var priceValues = [[${priceMap.values()}]];
+            var stockLabels = [[${stockMap.keySet()}]];
+            var stockValues = [[${stockMap.values()}]];
+
+            const amountOfSales_ctx = document.getElementById('amountOfSalesChart');
+            const sale_ctx = document.getElementById('salesChart');
+            const amountOfArrivals_ctx = document.getElementById('amountOfArrivalsChart');
+            const arrival_ctx = document.getElementById('arrivalsChart');
+            const price_ctx = document.getElementById('priceChart');
+            const stock_ctx = document.getElementById('stockChart');
+            
+            new Chart(amountOfSales_ctx, {
+                type : 'bar',
+                data : {
+                    labels : amountOfSalesLabels,
+                    datasets : [ {
+                        data : amountOfSalesValues,
+                        borderColor: 'rgba(255, 165, 0, 1)',
+                        backgroundColor: 'rgba(255, 165, 0, 0.5)',
+                        borderWidth : 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 10
+                    } ]
+                },
+                options : {
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins : {
+                    	title: {
+                    		display: true,
+                    		text: 'Продажи в деньгах'
+                    	},
+                    	legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0₽";
+                                    }
+                                    
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(sale_ctx, {
+                type : 'bar',
+                data : {
+                    labels : saleLabels,
+                    datasets : [ {
+                        data : saleValues,
+                        borderColor: 'rgba(255, 165, 0, 1)',
+                        backgroundColor: 'rgba(255, 165, 0, 0.5)',
+                        borderWidth : 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 10
+                    } ]
+                },
+                options : {
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            grace: '5%'
+                        }
+                    },
+                    plugins : {
+                    	title: {
+                            display: true,
+                            text: 'Продажи в штуках'
+                        },
+                    	legend: {
+                    		display: false
+                    	},
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0 " + measure;
+                                    }
+                                    
+                                    return value + ' ' + measure;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(amountOfArrivals_ctx, {
+                type : 'bar',
+                data : {
+                    labels : amountOfArrivalsLabels,
+                    datasets : [ {
+                        label : 'Суммы поступлений',
+                        data : amountOfArrivalsValues,
+                        borderWidth : 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 10
+                    } ]
+                },
+                options : {
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins : {
+                    	title: {
+                    		display: true,
+                    		text: 'Поступления в деньгах'
+                    	},
+                    	legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0₽";
+                                    }
+                                    
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(arrival_ctx, {
+                type : 'bar',
+                data : {
+                    labels : arrivalLabels,
+                    datasets : [ {
+                        label : 'Поступило',
+                        data : arrivalValues,
+                        borderWidth : 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 10
+                    } ]
+                },
+                options : {
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            grace: '5%'
+                        }
+                    },
+                    plugins : {
+                    	title: {
+                            display: true,
+                            text: 'Поступления в штуках'
+                        },
+                    	legend: {
+                    		display: false
+                    	},
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0 " + measure;
+                                    }
+                                    
+                                    return value + ' ' + measure;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(price_ctx, {
+                type : 'line',
+                data : {
+                    labels : priceLabels,
+                    datasets : [ {
+                        data : priceValues,
+                        borderColor: 'rgba(255, 165, 0, 1)',
+                        backgroundColor: 'rgba(255, 165, 0, 0.5)',
+                        borderWidth : 2
+                    } ]
+                },
+                options : {
+                	elements: {
+                        point:{
+                            radius: 0
+                        }
+                    },
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins : {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0₽";
+                                    }
+                                    
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if(parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "₽";
+                                    } else {
+                                        return value + "₽";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(stock_ctx, {
+                type : 'line',
+                data : {
+                    labels : stockLabels,
+                    datasets : [ {
+                        data: stockValues,
+                        backgroundColor: 'rgba(255, 165, 0, 0.5)',
+                        fill: true
+                    } ]
+                },
+                options : {
+                	elements: {
+                        point:{
+                            radius: 0
+                        }
+                    },
+                    responsive : true,
+                    maintainAspectRatio : false,
+                    interaction : {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales : {
+                        y : {
+                            beginAtZero : true,
+                            grace: '5%'
+                        }
+                    },
+                    plugins : {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.parsed.y;
+                                    
+                                    if(value == '') {
+                                        return "0 " + measure;
+                                    }
+                                    
+                                    return value + ' ' + measure;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            /*]]>*/
+        </script>
+</body>
+</html>

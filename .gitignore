@@ -1,0 +1,29 @@
+# Backupfiles from mergetools #
+*.orig
+
+# Java Class Files #
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+
+# Eclipse #
+/.project
+/.settings
+bin/**
+.classpath
+
+# Maven #
+target/
+/.mvn
+/.maven
+/.repository
+.flattened-pom.xml
+
+# Project Files #
+*.md
+/mvnw
+/mvnw.cmd

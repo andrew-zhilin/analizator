@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<link rel="stylesheet" th:href="@{/css/global.css}">
+<meta charset="UTF-8">
+<title>Анализатор - список позиций</title>
+</head>
+<body>
+	<div th:insert="~{layouts/header :: header}"></div>
+
+	<div class="content">
+		<h1>Список позиций</h1>
+
+		<table style="width: 100%;">
+			<tr>
+				<th width="12%">Бренд</th>
+				<th width="12%">Артикул</th>
+				<th width="64%">Наименование</th>
+				<th width="12%">Дата</th>
+			</tr>
+			<!--/*/ <th:block th:each="item : ${itemPage.content}"> /*/-->
+			<tr>
+				<td th:text="${item.manufacturer}" style="text-align: center;"></td>
+				<td th:text="${item.partNumber}" style="text-align: center;"></td>
+				<td><a th:text="${item.name}" th:href="@{/items/{id}(id=${item.id})}"></a></td>
+				<td th:text="${#temporals.format(item.createdAt,'dd.MM.yyyy')}" style="text-align: center;"></td>
+			</tr>
+			<tr>
+                <td th:text="${item.crossReference}" colspan="5" style="background: #E8E8E8;"></td>
+            </tr>
+            <!--/*/ <th:block> /*/-->
+		</table>
+
+        <div th:if="${itemPage.totalPages > 0}" class="pagination">
+           <span th:if="${(itemPage.number - 4) > 1}">
+               <a th:href="@{/items(page=1)}">Первая страница</a>
+           </span>
+
+           <span th:each="pageNumber : ${pageNumbers}">
+               <span th:if="${(pageNumber >= (itemPage.number - 4)) && (pageNumber <= (itemPage.number + 6))}">
+                   <a th:href="@{/items(page=${pageNumber})}" th:text=${pageNumber} th:class="${pageNumber==itemPage.number + 1} ? active"></a>
+                </span>
+            </span>
+            
+            <span th:if="${(itemPage.number + 6) < pageNumbers.size}">
+               <a th:href="@{/items(page=${pageNumbers.size})}">Последняя страница</a>
+           </span>
+        </div>
+
+	</div>
+
+	<div th:insert="~{layouts/footer :: footer}"></div>
+</body>
+</html>

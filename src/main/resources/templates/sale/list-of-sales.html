@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<link rel="stylesheet" th:href="@{/css/global.css}">
+<meta charset="UTF-8">
+<title>Анализатор - список продаж</title>
+</head>
+<body>
+	<div th:insert="~{layouts/header :: header}"></div>
+
+	<div class="content">
+		<div class="pagination">
+			<a th:href="@{/sales(page=${salePage.number + 1})}" th:class="${warehouse == null} ? active">Все склады</a>
+			<a th:href="@{/sales(wh='vdk', page=${salePage.number + 1})}"
+			   th:class="${warehouse != null && warehouse.getName().equals('vdk')} ? active">Владивосток</a>
+			<a th:href="@{/sales(wh='msk', page=${salePage.number + 1})}"
+				th:class="${warehouse != null && warehouse.getName().equals('msk')} ? active">Москва</a>
+		</div>
+
+		<h1>Список продаж</h1>
+
+		<table style="width: 100%;">
+			<tr>
+				<th width="33.3%">Дата</th>
+				<th width="33.3%">Наименований продано</th>
+				<th width="33.3%">Сумма</th>
+			</tr>
+			<tr th:each="sale : ${salePage.content}">
+			    <td style="text-align: center;">
+                     <a th:if="${warehouse == null}" th:text="${#temporals.format(sale.date,'dd.MM.yyyy')}" th:href="@{/sales/sale(from=${sale.date}, to=${sale.date})}"></a>
+                     <a th:if="${warehouse != null}" th:text="${#temporals.format(sale.date,'dd.MM.yyyy')}" th:href="@{/sales/sale(wh=${warehouse.getName()}, from=${sale.date}, to=${sale.date})}"></a>
+                </td>
+				<td th:text="${sale.numberOfItems}" style="text-align: center;"></td>
+				<td
+					th:text="${#numbers.formatInteger(sale.amount, 0, 'WHITESPACE')} + ' руб.'"
+					style="text-align: center;"></td>
+			</tr>
+		</table>
+
+		<div th:if="${salePage.totalPages > 0}" class="pagination">
+	       <span th:if="${(salePage.number - 4) > 1}">
+               <a th:if="${warehouse == null}" th:href="@{/sales(page=1)}">Первая страница</a>
+               <a th:if="${warehouse != null}" th:href="@{/sales(wh=${warehouse.getName()}, page=1)}">Первая страница</a>
+           </span>
+
+		   <span th:each="pageNumber : ${pageNumbers}">
+		       <span th:if="${(pageNumber >= (salePage.number - 4)) && (pageNumber <= (salePage.number + 6))}">
+			       <a th:if="${warehouse == null}" th:href="@{/sales(page=${pageNumber})}" th:text=${pageNumber}
+					   th:class="${pageNumber==salePage.number + 1} ? active"></a>
+					<a th:if="${warehouse != null}" th:href="@{/sales(wh=${warehouse.getName()}, page=${pageNumber})}"
+					   th:text=${pageNumber} th:class="${pageNumber==salePage.number + 1} ? active"></a>
+				</span>
+			</span>
+			
+			<span th:if="${(salePage.number + 6) < pageNumbers.size}">
+               <a th:if="${warehouse == null}" th:href="@{/sales(page=${pageNumbers.size})}">Последняя страница</a>
+               <a th:if="${warehouse != null}" th:href="@{/sales(wh=${warehouse.getName()}, page=${pageNumbers.size})}">Последняя страница</a>
+           </span>
+		</div>
+
+	</div>
+
+	<div th:insert="~{layouts/footer :: footer}"></div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<link rel="stylesheet" th:href="@{/css/global.css}">
+<meta charset="UTF-8">
+<title>Анализатор</title>
+</head>
+<body>
+	<div th:insert="~{layouts/header :: header}"></div>
+
+	<div class="content">
+		<div class="pagination">
+			<a href="?" th:class="${warehouse == null} ? active">Все склады</a>
+			<a href="?wh=vdk"
+				th:class="${warehouse != null && warehouse.getName().equals('vdk')} ? active">Владивосток</a>
+			<a href="?wh=msk"
+				th:class="${warehouse != null && warehouse.getName().equals('msk')} ? active">Москва</a>
+		</div>
+
+		<h1>Продажи товара</h1>
+
+		<span th:unless="${sales != null AND !sales.empty}">нет данных</span>
+
+		<table th:if="${sales != null AND !sales.empty}" style="width: 100%;">
+			<tr>
+				<th width="33.3%">Дата</th>
+				<th width="33.3%">Наименований продано</th>
+				<th width="33.3%">Сумма</th>
+			</tr>
+			<tr th:each="sale : ${sales}">
+			    <td style="text-align: center;">
+			         <a th:if="${warehouse == null}" th:text="${#temporals.format(sale.date,'dd.MM.yyyy')}" th:href="@{/sales/sale(from=${sale.date}, to=${sale.date})}"></a>
+			         <a th:if="${warehouse != null}" th:text="${#temporals.format(sale.date,'dd.MM.yyyy')}" th:href="@{/sales/sale(wh=${warehouse.getName()}, from=${sale.date}, to=${sale.date})}"></a>
+			    </td>
+				<td th:text="${sale.numberOfItems}" style="text-align: center;"></td>
+				<td th:text="${#numbers.formatInteger(sale.amount, 0, 'WHITESPACE')} + ' руб.'" style="text-align: center;"></td>
+			</tr>
+		</table>
+
+		<div style="padding-top: 4px;">
+			<a th:if="${warehouse == null}" href="/sales">Подробнее</a> <a
+				th:if="${warehouse != null}"
+				th:href="@{/sales(wh=${warehouse.getName()})}">Подробнее</a>
+		</div>
+
+		<h1>Поступления товара</h1>
+
+		<span th:unless="${arrivals != null AND !arrivals.empty}">нет
+			данных</span>
+
+		<table th:if="${arrivals != null AND !arrivals.empty}"
+			style="width: 100%;">
+			<tr>
+				<th width="33.3%">Дата</th>
+				<th width="33.3%">Наименований пополнено</th>
+				<th width="33.3%">Сумма</th>
+			</tr>
+			<tr th:each="arrival : ${arrivals}">
+			    <td style="text-align: center;">
+                     <a th:if="${warehouse == null}" th:text="${#temporals.format(arrival.date,'dd.MM.yyyy')}" th:href="@{/arrivals/arrival(from=${arrival.date}, to=${arrival.date})}"></a>
+                     <a th:if="${warehouse != null}" th:text="${#temporals.format(arrival.date,'dd.MM.yyyy')}" th:href="@{/arrivals/arrival(wh=${warehouse.getName()}, from=${arrival.date}, to=${arrival.date})}"></a>
+                </td>
+				<td th:text="${arrival.numberOfItems}" style="text-align: center;"></td>
+				<td
+					th:text="${#numbers.formatInteger(arrival.amount, 0, 'WHITESPACE')} + ' руб.'"
+					style="text-align: center;"></td>
+			</tr>
+		</table>
+
+		<div style="padding-top: 4px;">
+            <a th:if="${warehouse == null}" href="/arrivals">Подробнее</a> <a
+                th:if="${warehouse != null}"
+                th:href="@{/arrivals(wh=${warehouse.getName()})}">Подробнее</a>
+        </div>
+
+		<h1>Изменения цен</h1>
+
+		<span th:unless="${priceChanges != null AND !priceChanges.empty}">нет
+			данных</span>
+
+		<table th:if="${priceChanges != null AND !priceChanges.empty}"
+			style="width: 100%;">
+			<tr>
+				<th width="25%">Дата</th>
+				<th width="25%">Изменилось в цене</th>
+				<th width="25%">Выросло в цене</th>
+				<th width="25%">Упало в цене</th>
+			</tr>
+			<tr th:each="priceChange : ${priceChanges}">
+			     <td style="text-align: center;">
+                     <a th:text="${#temporals.format(priceChange.date,'dd.MM.yyyy')}" th:href="@{/price-changes/price-change(date=${priceChange.date})}"></a>
+                </td>
+				<td th:text="${priceChange.priceUp} + ${priceChange.priceDown}"
+					style="text-align: center;"></td>
+				<td style="text-align: center;"><span th:text="${priceChange.priceUp} + '▲'" style="color: red;"></span></td>
+				<td style="text-align: center;"><span th:text="${priceChange.priceDown} + '▼'" style="color: green;"></span></td>
+			</tr>
+		</table>
+
+		<div style="padding-top: 4px;">
+			<a href="/price-changes">Подробнее</a>
+		</div>
+
+		<h1>Стоимость остатков</h1>
+
+		<span th:unless="${cost != null AND !cost.empty}">нет данных</span>
+
+		<table th:if="${cost != null AND !cost.empty}" style="width: 100%;">
+			<tr>
+				<th width="33.3%">Дата</th>
+				<th width="33.3%">Наименований</th>
+				<th width="33.3%">Стоимость</th>
+			</tr>
+			<tr th:each="cost : ${cost}">
+			    <td style="text-align: center;">
+                     <a th:if="${warehouse == null}" th:text="${#temporals.format(cost.date,'dd.MM.yyyy')}" th:href="@{/cost/cost(date=${cost.date})}"></a>
+                     <a th:if="${warehouse != null}" th:text="${#temporals.format(cost.date,'dd.MM.yyyy')}" th:href="@{/cost/cost(wh=${warehouse.getName()}, date=${cost.date})}"></a>
+                </td>
+				<td th:text="${cost.numberOfItems}" style="text-align: center;"></td>
+				<td th:text="${#numbers.formatInteger(cost.value, 0, 'WHITESPACE')} + ' руб.'" style="text-align: center;"></td>
+			</tr>
+		</table>
+
+        <div style="padding-top: 4px;">
+            <a th:if="${warehouse == null}" href="/cost">Подробнее</a> <a
+                th:if="${warehouse != null}"
+                th:href="@{/cost(wh=${warehouse.getName()})}">Подробнее</a>
+        </div>
+        
+		<h1>Бренды в наличии</h1>
+
+		<span
+			th:unless="${manufacturers != null AND !manufacturers.empty}">нет
+			данных</span>
+
+		<table
+			th:if="${manufacturers != null AND !manufacturers.empty}"
+			style="width: 100%;">
+			<tr>
+				<th width="33.3%">Бренд</th>
+				<th width="33.3%">Наименований</th>
+				<th width="33.3%">Стоимость</th>
+			</tr>
+			<tr th:each="manufacturer : ${manufacturers}">
+			    <td style="text-align: center;">
+                     <a th:if="${warehouse == null}" th:text="${manufacturer.name}" th:href="@{/cost/cost(date=${manufacturer.date}, manufacturer=${manufacturer.name})}"></a>
+                     <a th:if="${warehouse != null}" th:text="${manufacturer.name}" th:href="@{/cost/cost(wh=${warehouse.getName()}, date=${manufacturer.date}, manufacturer=${manufacturer.name})}"></a>
+                </td>
+				<td th:text="${manufacturer.numberOfItems}"
+					style="text-align: center;"></td>
+				<td
+					th:text="${#numbers.formatInteger(manufacturer.cost, 0, 'WHITESPACE')} + ' руб.'"
+					style="text-align: center;"></td>
+			</tr>
+		</table>
+
+		<div style="padding-top: 4px;">
+            <a th:if="${warehouse == null}" href="/manufacturers">Подробнее</a> <a
+                th:if="${warehouse != null}"
+                th:href="@{/manufacturers(wh=${warehouse.getName()})}">Подробнее</a>
+        </div>
+
+		<h1>Новые позиции</h1>
+
+		<span th:unless="${items != null AND !items.empty}">нет
+			данных</span>
+
+		<table th:if="${items != null AND !items.empty}"
+			style="width: 100%;">
+			<tr>
+				<th width="12%">Бренд</th>
+				<th width="12%">Артикул</th>
+				<th width="64%">Наименование</th>
+				<th width="12%">Создана</th>
+			</tr>
+			<tr th:each="item : ${items}">
+				<td th:text="${item.manufacturer}" style="text-align: center;"></td>
+				<td th:text="${item.partNumber}" style="text-align: center;"></td>
+				<td>
+				    <a th:if="${warehouse == null}" th:text="${item.name}" th:href="@{/items/{id}(id=${item.id})}"></a>
+				    <a th:if="${warehouse != null}" th:text="${item.name}" th:href="@{/items/{id}(id=${item.id}, wh=${warehouse.getName()})}"></a>
+				</td>
+				<td th:text="${#temporals.format(item.createdAt,'dd.MM.yyyy')}" style="text-align: center;"></td>
+			</tr>
+		</table>
+
+		<div style="padding-top: 4px;">
+			<a href="/items">Подробнее</a>
+		</div>
+	</div>
+
+	<div th:insert="~{layouts/footer :: footer}"></div>
+</body>
+</html>

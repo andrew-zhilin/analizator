@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div class="header" th:fragment="header">
+		<a th:if="${warehouse == null}" href="/">Анализатор</a>
+		<a th:if="${warehouse != null}" th:href="@{/(wh=${warehouse.getName()})}">Анализатор</a>
+		
+		<form action="/search" method="get">
+            <input type="text" name="query" required>
+            <input type="submit" value="Найти">
+        </form>
+	</div>
+</body>
+</html>
